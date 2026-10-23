@@ -35,6 +35,20 @@ SELECT
     pdf.file_name       AS pdf_file_name,
     pdf.title           AS pdf_title,
     pdf.mime_type       AS pdf_mime_type,
+    -- workflow / Super User fields (Invoice Details page)
+    i.process_id,
+    pr.name             AS process_name,
+    i.origin_city_id,
+    oc.name             AS origin_name,
+    i.destination_city_id,
+    dc.name             AS destination_name,
+    i.team_id,
+    tm.name             AS team_name,
+    i.assigned_user_id,
+    au.name             AS assigned_user_name,
+    i.claim_number,
+    i.additional_info,
+    i.filenet_id,
     -- filter column, not part of udt_invoice_result
     i.module_id
 FROM app.invoices i
@@ -42,6 +56,11 @@ JOIN app.app_modules m  ON m.id = i.module_id
 JOIN app.applications a ON a.id = m.application_id
 JOIN app.vendors v      ON v.id = i.vendor_id
 LEFT JOIN app.country_stations s ON s.id = i.station_id
+LEFT JOIN app.processes pr ON pr.id = i.process_id
+LEFT JOIN app.cities oc    ON oc.id = i.origin_city_id
+LEFT JOIN app.cities dc    ON dc.id = i.destination_city_id
+LEFT JOIN app.teams tm     ON tm.id = i.team_id
+LEFT JOIN app.users au     ON au.id = i.assigned_user_id
 LEFT JOIN LATERAL (
     SELECT att.id, att.file_name, att.title, att.mime_type
     FROM app.invoice_attachments att

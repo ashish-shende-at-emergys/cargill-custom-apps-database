@@ -35,6 +35,16 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA app REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
 \ir tables/12_invoice_line_items.sql
 \ir tables/13_invoice_ccpps.sql
 
+-- ---- Master data (Settings > Configuration) ----
+\ir tables/14_countries.sql
+\ir tables/15_states.sql
+\ir tables/16_cities.sql
+\ir tables/17_business_units.sql
+\ir tables/18_statuses.sql
+\ir tables/19_processes.sql
+\ir tables/20_master_data_entities.sql
+\ir tables/21_invoice_workflow.sql
+
 -- ---- Rebuild programmability: functions, views and composite types ----
 DO $$
 DECLARE r record;
@@ -79,9 +89,14 @@ END $$;
 \ir types/response/udt_lookup_value_result.sql
 \ir types/response/udt_vendor_result.sql
 \ir types/response/udt_lookups_result.sql
+\ir types/response/udt_master_data_entity_result.sql
+\ir types/response/udt_master_data_result.sql
+\ir types/response/udt_master_data_list_result.sql
+\ir types/response/udt_master_data_option_result.sql
 
--- ---- Helper function & views ----
+-- ---- Helper functions & views ----
 \ir functions/ufn_like_contains.sql
+\ir functions/ufn_master_data_select_sql.sql
 \ir views/vw_user_summary.sql
 \ir views/vw_invoice_summary.sql
 
@@ -95,12 +110,16 @@ END $$;
 \ir procedures/users/usp_user_list.sql
 \ir procedures/users/usp_user_create.sql
 \ir procedures/users/usp_user_update.sql
+\ir procedures/users/usp_user_delete.sql
 
 \ir procedures/invoices/usp_invoice_list.sql
 \ir procedures/invoices/usp_invoice_get_by_code.sql
 \ir procedures/invoices/usp_invoice_create_batch.sql
 \ir procedures/invoices/usp_invoice_update_status.sql
 \ir procedures/invoices/usp_attachment_get_by_id.sql
+\ir procedures/invoices/usp_attachment_add.sql
+\ir procedures/invoices/usp_invoice_update_details.sql
+\ir procedures/invoices/usp_invoice_send_to_previous_team.sql
 
 \ir procedures/app_config/usp_team_list.sql
 \ir procedures/app_config/usp_app_settings_get.sql
@@ -108,6 +127,12 @@ END $$;
 \ir procedures/app_config/usp_team_member_list.sql
 \ir procedures/app_config/usp_team_member_add.sql
 \ir procedures/app_config/usp_team_member_remove.sql
+
+\ir procedures/master_data/usp_master_data_entities.sql
+\ir procedures/master_data/usp_master_data_list.sql
+\ir procedures/master_data/usp_master_data_options.sql
+\ir procedures/master_data/usp_master_data_save.sql
+\ir procedures/master_data/usp_master_data_delete.sql
 
 \ir procedures/lookups/usp_lookup_get_all.sql
 

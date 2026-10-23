@@ -8,7 +8,7 @@ CREATE TYPE app.udt_team_member_list_result AS (
     name           varchar(200),
     email          varchar(255),
     alias          varchar(100),
-    team           varchar(100),
+    team           varchar(150),
     total_items    integer,
     total_pages    integer,
     page           integer,

@@ -11,20 +11,20 @@ BEGIN;
 
 -- ---------------- Applications & route modules ----------------
 INSERT INTO app.applications (code, name, description) VALUES
-    ('GP',     'GP',     'Global Payments'),
-    ('sjo',    'SJO',    'SJO Payment Processing'),
-    ('rospbu', 'ROSPBU', 'ROSPBU Payment Processing');
+    ('GP',     'GP',     'General Payments'),
+    ('sjo',    'SJO',    'SJO Invoice Processing'),
+    ('rospbu', 'ROSPBU', 'ROSPBU Invoice Processing');
 
 CREATE TEMP TABLE seed_modules (slug text, app_code text, name text, prefix text, pdf_file text, pdf_title text) ON COMMIT DROP;
 INSERT INTO seed_modules VALUES
-    ('GP',                     'GP',     'GP (Global Payments)',   'GP',                     'gp-tool-invoice.pdf',                'GP - Global Payments Invoice'),
+    ('GP',                     'GP',     'General Payments',       'GP',                     'gp-tool-invoice.pdf',                'GP - General Payments Invoice'),
     ('gpp',                    'GP',     'GPP',                    'GPP',                    'gp-tool-invoice.pdf',                'GPP - Global Payment Processing Invoice'),
     ('gp-tool',                'GP',     'GP Tool',                'GP-TOOL',                'gp-tool-invoice.pdf',                'GP Tool Grain Pricing & Freight Invoice'),
     ('freight-processing',     'GP',     'Freight Processing',     'FREIGHT-PROCESSING',     'freight-processing-invoice.pdf',     'Freight Processing Invoice'),
-    ('sjo',                    'sjo',    'SJO',                    'SJO',                    'sjo-invoice-processing-invoice.pdf', 'SJO Invoice Processing Document'),
+    ('sjo',                    'sjo',    'SJO Invoice Processing', 'SJO',                    'sjo-invoice-processing-invoice.pdf', 'SJO Invoice Processing Document'),
     ('sjo-invoice-processing', 'sjo',    'SJO Invoice Processing', 'SJO-INVOICE-PROCESSING', 'sjo-invoice-processing-invoice.pdf', 'SJO Invoice Processing Document'),
     ('sjo-index-processing',   'sjo',    'SJO Index Processing',   'SJO-INDEX-PROCESSING',   'sjo-index-processing-invoice.pdf',   'SJO Index Processing Voucher'),
-    ('rospbu',                 'rospbu', 'ROSPBU',                 'ROSPBU',                 'rospbu-invoice-report-invoice.pdf',  'ROSPBU Invoice Report'),
+    ('rospbu',                 'rospbu', 'ROSPBU Invoice Processing', 'ROSPBU',                 'rospbu-invoice-report-invoice.pdf',  'ROSPBU Invoice Report'),
     ('rospbu-invoice-report',  'rospbu', 'ROSPBU Invoice Report',  'ROSPBU-INVOICE-REPORT',  'rospbu-invoice-report-invoice.pdf',  'ROSPBU Invoice Report');
 
 INSERT INTO app.app_modules (application_id, slug, name, invoice_prefix)
@@ -179,9 +179,16 @@ ORDER BY i.id, c.ord;
 
 COMMIT;
 
+-- Configuration master data (countries, states, cities, BUs, team codes, processes)
+\ir seed_master_data.sql
+
 SELECT 'applications' AS tbl, count(*) AS row_count FROM app.applications
 UNION ALL SELECT 'app_modules', count(*) FROM app.app_modules
 UNION ALL SELECT 'users', count(*) FROM app.users
 UNION ALL SELECT 'invoices', count(*) FROM app.invoices
 UNION ALL SELECT 'invoice_attachments', count(*) FROM app.invoice_attachments
-UNION ALL SELECT 'invoice_ccpps', count(*) FROM app.invoice_ccpps;
+UNION ALL SELECT 'invoice_ccpps', count(*) FROM app.invoice_ccpps
+UNION ALL SELECT 'countries / states / cities', (SELECT count(*) FROM app.countries) + (SELECT count(*) FROM app.states) + (SELECT count(*) FROM app.cities)
+UNION ALL SELECT 'business_units', count(*) FROM app.business_units
+UNION ALL SELECT 'statuses', count(*) FROM app.statuses
+UNION ALL SELECT 'processes', count(*) FROM app.processes;

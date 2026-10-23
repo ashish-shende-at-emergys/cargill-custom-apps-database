@@ -9,3 +9,12 @@ CREATE TABLE IF NOT EXISTS app.teams (
 );
 
 -- ---- UPGRADES (append guarded changes; never edit the CREATE above for existing DBs) ----
+-- Teams (queues) became master data managed under Settings > Configuration
+ALTER TABLE app.teams ADD COLUMN IF NOT EXISTS code        varchar(30)    NULL;
+ALTER TABLE app.teams ADD COLUMN IF NOT EXISTS description varchar(500)   NULL;
+ALTER TABLE app.teams ADD COLUMN IF NOT EXISTS sort_order  integer        NOT NULL DEFAULT 0;
+ALTER TABLE app.teams ADD COLUMN IF NOT EXISTS is_active   boolean        NOT NULL DEFAULT true;
+ALTER TABLE app.teams ADD COLUMN IF NOT EXISTS created_at  timestamptz(0) NOT NULL DEFAULT now();
+ALTER TABLE app.teams ADD COLUMN IF NOT EXISTS updated_at  timestamptz(0) NOT NULL DEFAULT now();
+ALTER TABLE app.teams ALTER COLUMN name TYPE varchar(150);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_teams_code ON app.teams (lower(code)) WHERE code IS NOT NULL;

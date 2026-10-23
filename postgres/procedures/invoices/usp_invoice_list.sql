@@ -47,7 +47,10 @@ BEGIN
                m.first_invoice_number, m.second_invoice_number, m.invoice_date, m.expiry_days, m.invoice_expiry_date,
                m.support_team, m.pre_settlement_number, m.credit_note, m.currency_code, m.amount, m.invoice_subtotal,
                m.invoice_subtotal_with_tax, m.status, m.reception_date, m.email_reception_date, m.vendor_name, m.cuit,
-               m.country_station, m.pdf_attachment_id, m.pdf_file_name, m.pdf_title, m.pdf_mime_type
+               m.country_station, m.pdf_attachment_id, m.pdf_file_name, m.pdf_title, m.pdf_mime_type,
+               m.process_id, m.process_name, m.origin_city_id, m.origin_name, m.destination_city_id,
+               m.destination_name, m.team_id, m.team_name, m.assigned_user_id, m.assigned_user_name,
+               m.claim_number, m.additional_info, m.filenet_id
            )::app.udt_invoice_result),
            m.total, p.pages, p.page, p_page_size
     FROM matches m CROSS JOIN paging p

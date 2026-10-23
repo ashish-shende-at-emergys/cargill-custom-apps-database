@@ -19,7 +19,10 @@ AS $$
             v.first_invoice_number, v.second_invoice_number, v.invoice_date, v.expiry_days, v.invoice_expiry_date,
             v.support_team, v.pre_settlement_number, v.credit_note, v.currency_code, v.amount, v.invoice_subtotal,
             v.invoice_subtotal_with_tax, v.status, v.reception_date, v.email_reception_date, v.vendor_name, v.cuit,
-            v.country_station, v.pdf_attachment_id, v.pdf_file_name, v.pdf_title, v.pdf_mime_type
+            v.country_station, v.pdf_attachment_id, v.pdf_file_name, v.pdf_title, v.pdf_mime_type,
+            v.process_id, v.process_name, v.origin_city_id, v.origin_name, v.destination_city_id,
+            v.destination_name, v.team_id, v.team_name, v.assigned_user_id, v.assigned_user_name,
+            v.claim_number, v.additional_info, v.filenet_id
         )::app.udt_invoice_result),
         coalesce((
             SELECT jsonb_agg(to_jsonb(ROW(

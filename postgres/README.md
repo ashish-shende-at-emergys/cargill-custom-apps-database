@@ -8,7 +8,9 @@ postgres/
   deploy_schema.sql      Create OR update the schema: one transaction, safe to re-run, never drops data
   reset_schema.sql       DESTRUCTIVE: DROP SCHEMA app CASCADE, then deploy (dev / demo only)
   seed.sql               Demo data mirroring the frontend mock (expects empty tables)
-  tables/                One file per table (01_users.sql … 13_invoice_ccpps.sql)
+  seed_master_data.sql   Demo Configuration data (countries, states, cities, BUs, team codes, processes);
+                         re-runnable, so it can be applied to an existing database
+  tables/                One file per table (01_users.sql … 13_invoice_ccpps.sql, 14-20 master data)
   types/request/         udt_invoice_input (bulk invoice rows)
   types/response/        udt_*_result composite types: the shape of every function result
   functions/             ufn_like_contains (literal, case-insensitive "contains" search)
@@ -64,7 +66,34 @@ psql "<connection>" -f database/postgres/seed.sql
 | `usp_team_member_list` | `p_module_id`, `p_team`, `p_search`, `p_page`, `p_page_size` | `SETOF udt_team_member_list_result` |
 | `usp_team_member_add` | `p_module_id`, `p_name`, `p_email`, `p_alias`, `p_team` | `udt_team_member_result` |
 | `usp_team_member_remove` | `p_module_id`, `p_member_ids integer[]` | `udt_row_count_result` |
-| `usp_lookup_get_all` | – | `udt_lookups_result` |
+| `usp_lookup_get_all` | – | `udt_lookups_result` (incl. active statuses with colors) |
+| `usp_user_delete` | `p_user_id`, `p_deleted_by` | `udt_row_count_result` |
+| `usp_master_data_entities` | – | `SETOF udt_master_data_entity_result` |
+| `usp_master_data_list` | `p_entity`, `p_search`, `p_parent_id`, `p_include_inactive`, `p_page`, `p_page_size` | `SETOF udt_master_data_list_result` |
+| `usp_master_data_options` | `p_entity`, `p_parent_id` | `SETOF udt_master_data_option_result` |
+| `usp_master_data_save` | `p_entity`, `p_id` (NULL = create), code, name, description, parent, color, order, active | `udt_master_data_result` |
+| `usp_master_data_delete` | `p_entity`, `p_id` | `udt_row_count_result` |
+
+### Invoice workflow (Invoice Details page)
+
+`tables/21_invoice_workflow.sql` adds to `app.invoices`: `process_id` (Processes), `origin_city_id` /
+`destination_city_id` (Cities), `team_id` (current team / queue, shown as "Stage"), `assigned_user_id`,
+`claim_number`, `additional_info` and `filenet_id`. `usp_invoice_update_details` saves them,
+`usp_invoice_send_to_previous_team` moves an invoice to the active team ordered just before its current
+one, and `usp_attachment_add` registers PDFs uploaded from the viewer.
+
+### Configuration (master data)
+
+Countries, states (per country), cities (per state), business units, teams (queues), statuses and
+processes share one column set: `code, name, description, sort_order, is_active`. States and cities
+also have a parent column, and statuses a pill `color`. `app.master_data_entities` lists them. The
+`usp_master_data_*` functions build their SQL from that registry with `%I` quoting, so they only
+ever touch these tables. Deleting an item that is still referenced (a country with states, a team
+with members, a status used by invoices) raises `CA409`; deactivate it instead.
+
+**Statuses drive invoices**: `invoices.status` references `statuses.code` (`ON UPDATE CASCADE`),
+replacing the old fixed CHECK list. Invoice functions accept any active status, matched
+case-insensitively. The four core statuses are created by `tables/18_statuses.sql`.
 
 **Errors**: functions `RAISE` with custom SQLSTATEs `CA400`, `CA404` and `CA409`. The backend
 maps them to HTTP 400/404/409 and returns the message, which is written to be shown to users.

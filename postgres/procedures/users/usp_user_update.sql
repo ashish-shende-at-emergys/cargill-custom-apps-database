@@ -1,17 +1,20 @@
 -- =====================================================================
 -- app.usp_user_update - edit a user / Suspend-Activate toggle (Settings / UAM)
--- Request:  p_user_id; NULL p_name / p_role / p_status keep the current value.
+-- Request:  p_user_id; NULL p_name / p_email / p_role / p_status keep the current value.
+--           A username that equals the old email follows an email change.
 --           p_app_codes replaces the assigned apps when it is NOT NULL.
 -- Response: app.udt_user_result (the updated user)
 -- Errors:   CA400 invalid role / status / unknown application code
 --           CA404 user not found
+--           CA409 email already used by another user
 -- =====================================================================
 CREATE OR REPLACE FUNCTION app.usp_user_update(
     p_user_id   integer,
     p_name      text    DEFAULT NULL,
     p_role      text    DEFAULT NULL,
     p_status    text    DEFAULT NULL,
-    p_app_codes text[]  DEFAULT NULL
+    p_app_codes text[]  DEFAULT NULL,
+    p_email     text    DEFAULT NULL
 )
 RETURNS app.udt_user_result
 LANGUAGE plpgsql
@@ -36,8 +39,17 @@ BEGIN
         END IF;
     END IF;
 
+    IF p_email IS NOT NULL AND EXISTS (
+        SELECT 1 FROM app.users
+        WHERE id <> p_user_id AND (lower(email) = lower(p_email) OR lower(username) = lower(p_email))
+    ) THEN
+        RAISE EXCEPTION 'A user with email or username ''%'' already exists', p_email USING ERRCODE = 'CA409';
+    END IF;
+
     UPDATE app.users
        SET name       = coalesce(p_name, name),
+           username   = CASE WHEN p_email IS NOT NULL AND lower(username) = lower(email) THEN p_email ELSE username END,
+           email      = coalesce(p_email, email),
            role       = coalesce(p_role, role),
            status     = coalesce(p_status, status),
            updated_at = now()

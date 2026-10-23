@@ -19,7 +19,7 @@ DECLARE
     v_team_id   integer;
     v_result    app.udt_team_member_result;
 BEGIN
-    SELECT id INTO v_team_id FROM app.teams WHERE name = p_team;
+    SELECT id INTO v_team_id FROM app.teams WHERE name = p_team AND is_active;
     IF v_team_id IS NULL THEN
         RAISE EXCEPTION 'Unknown team ''%''', coalesce(p_team, '') USING ERRCODE = 'CA400';
     END IF;

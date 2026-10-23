@@ -6,7 +6,8 @@
 -- Behaviour: all-or-nothing (a function runs inside the caller's transaction). Vendors missing
 --           by CUIT and stations missing by "CCC - Station Name" are created; a station value
 --           that does not follow that pattern is stored as no station.
--- Errors:   CA400 empty request, missing fields, invalid status, duplicate codes in the request
+-- Errors:   CA400 empty request, missing fields, status not an active app.statuses code,
+--                 duplicate codes in the request
 --           CA404 unknown module
 --           CA409 invoice code already exists, or the module's daily
 --                 max_invoices_limit (app.app_settings) would be exceeded
@@ -48,11 +49,18 @@ BEGIN
         RAISE EXCEPTION 'Missing required invoice fields (%).', v_msg USING ERRCODE = 'CA400';
     END IF;
 
+    -- Statuses come from Settings > Configuration (app.statuses); match codes case-insensitively
+    UPDATE tmp_invoice_input r SET status = s.code
+    FROM app.statuses s
+    WHERE lower(s.code) = lower(r.status) AND s.is_active;
+
     SELECT string_agg('row ' || row_no || ': ' || status, ', ') INTO v_msg
-    FROM tmp_invoice_input
-    WHERE status NOT IN ('Pending', 'Approved', 'Processed', 'Rejected');
+    FROM tmp_invoice_input r
+    WHERE NOT EXISTS (SELECT 1 FROM app.statuses s WHERE s.code = r.status AND s.is_active);
     IF v_msg IS NOT NULL THEN
-        RAISE EXCEPTION 'Invalid status (%). Allowed: Pending, Approved, Processed, Rejected', v_msg USING ERRCODE = 'CA400';
+        RAISE EXCEPTION 'Invalid status (%). Allowed: %', v_msg,
+            (SELECT string_agg(code, ', ' ORDER BY sort_order) FROM app.statuses WHERE is_active)
+            USING ERRCODE = 'CA400';
     END IF;
 
     SELECT string_agg(invoice_code, ', ') INTO v_msg

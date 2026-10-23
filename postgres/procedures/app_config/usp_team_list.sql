@@ -1,5 +1,6 @@
 -- =====================================================================
--- app.usp_team_list - team names for the Admin Configuration team filter / Add Member
+-- app.usp_team_list - active team (queue) names for the Team Assignment filter / Add Member
+-- Teams are maintained under Settings > Configuration > Teams.
 -- Request:  none
 -- Response: SETOF app.udt_lookup_value_result
 -- =====================================================================
@@ -8,7 +9,8 @@ RETURNS SETOF app.udt_lookup_value_result
 LANGUAGE sql
 STABLE
 AS $$
-    SELECT name::varchar(160), (row_number() OVER (ORDER BY id))::integer
+    SELECT name::varchar(160), (row_number() OVER (ORDER BY sort_order, id))::integer
     FROM app.teams
-    ORDER BY id;
+    WHERE is_active
+    ORDER BY sort_order, id;
 $$;
